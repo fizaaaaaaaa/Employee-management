@@ -1,0 +1,43 @@
+---
+- name: Deploy Employee app on the app server
+  hosts: appserver
+  become: yes
+  tasks:
+    - name: Install Docker and the Python Docker library
+      apt:
+        name:
+          - docker.io
+          - python3-docker
+        state: present
+        update_cache: yes
+
+    - name: Make sure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run backend container
+      community.docker.docker_container:
+        name: employee-server
+        image: "{{ dockerhub_user }}/employee-server:latest"
+        pull: yes
+        recreate: yes
+        state: started
+        restart_policy: always
+        published_ports:
+          - "5050:5050"
+        env:
+          ATLAS_URI: "{{ atlas_uri }}"
+          PORT: "5050"
+
+    - name: Run frontend container
+      community.docker.docker_container:
+        name: employee-client
+        image: "{{ dockerhub_user }}/employee-client:latest"
+        pull: yes
+        recreate: yes
+        state: started
+        restart_policy: always
+        published_ports:
+          - "80:80"

@@ -1,0 +1,23 @@
+---
+- name: Build Docker images and push to Docker Hub
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Build server image
+      command: docker build -t {{ dockerhub_user }}/employee-server:latest .
+      args:
+        chdir: "{{ playbook_dir }}/../server"
+
+    - name: Build client image
+      command: >
+        docker build
+        --build-arg VITE_API_URL={{ api_url }}
+        -t {{ dockerhub_user }}/employee-client:latest .
+      args:
+        chdir: "{{ playbook_dir }}/../client"
+
+    - name: Push server image
+      command: docker push {{ dockerhub_user }}/employee-server:latest
+
+    - name: Push client image
+      command: docker push {{ dockerhub_user }}/employee-client:latest
